@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation Cards – Keyframe Engine</title>
+    <!-- p5.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <!-- FontAwesome for icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="toggle-panel-btn" id="togglePanelBtn"><i class="fas fa-sliders-h"></i></div>
+    
+    <div class="side-panel" id="sidePanel">
+        <div class="panel-header">
+            <h2>Keyframes</h2>
+            <button class="close-btn" id="closePanelBtn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="controls">
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="kf1">KF&nbsp;1</button>
+                <button class="tab-btn" data-tab="kf2">KF&nbsp;2</button>
+                <button class="tab-btn" data-tab="kf3">KF&nbsp;3</button>
+            </div>
+            <!-- Keyframe parameter containers (initially only basic structure, will be populated dynamically) -->
+            <div id="kf1" class="tab-content active"></div>
+            <div id="kf2" class="tab-content"></div>
+            <div id="kf3" class="tab-content"></div>
+            <hr/>
+            <div class="actions">
+                <button id="animateForwardBtn"><i class="fas fa-play"></i>&nbsp;Forward</button>
+                <button id="animateBackwardBtn"><i class="fas fa-undo"></i>&nbsp;Backward</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-container" id="canvas-container"></div>
+
+    <script src="sketch.js"></script>
+</body>
+</html> 
