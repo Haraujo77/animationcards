@@ -69,4 +69,8 @@ body {
 
 .actions { display:flex; gap:10px; flex-wrap:wrap; }
 button { padding:8px 12px; background:#3498db; border:none; border-radius:4px; color:#fff; cursor:pointer; font-size:13px; }
+<<<<<<< HEAD
 button:hover { background:#2980b9; } 
+=======
+button:hover { background:#2980b9; }
+>>>>>>> 5f333127348a01d001b520e4df2d6d32de9d17fa

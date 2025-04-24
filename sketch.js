@@ -479,6 +479,15 @@ function interpolateStates(fromKF, toKF, t) {
     }
     // ------------------------------------------------------------------
 
+<<<<<<< HEAD
+=======
+    // For generic transitions, set up some variables for ordered spawn/despawn 
+    const spawnDelayPerCard = 0.005;
+    const spawnDuration = 0.3;
+    const specialTransition = fromKF.layout === 'stacked-group' || toKF.layout === 'stacked-group';
+    const spawnOrderMap = {}; // default order by index
+
+>>>>>>> 5f333127348a01d001b520e4df2d6d32de9d17fa
     for (let i = 0; i < maxCount; i++) {
         const fc = fromCards[i] || null;
         const tc = toCards[i] || null;
@@ -650,4 +659,8 @@ function draw() {
     }
 
     pop();
+<<<<<<< HEAD
 } 
+=======
+}
+>>>>>>> 5f333127348a01d001b520e4df2d6d32de9d17fa
