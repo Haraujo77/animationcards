@@ -18,3 +18,6 @@ Open `index.html` in a browser to view the animation. Use the side panel to adju
 - p5.js for rendering and animation
 - Vanilla JavaScript for UI and logic
 - CSS for styling
+
+## Online demo
+https://haraujo77.github.io/animationcards/
