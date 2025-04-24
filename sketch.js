@@ -57,7 +57,7 @@ let keyframes = [
         cardSpacing: 1,
         cardThickness: 0.1,
         groupSpec: null,
-        camera: { zoom: 5, rotX: 90, rotY: 0, rotZ: 0 },
+        camera: { zoom: 5, rotX: -90, rotY: 0, rotZ: 0 },
         groupSpacing: 5
     }
 ];
@@ -321,7 +321,8 @@ function applyKeyframe(kf, immediate=false) {
             const c = cards[i];
             c.x = cos(angle) * radius;
             c.z = sin(angle) * radius;
-            c.rotY = -angle + PI;
+            // Prevent card flipping: do not add PI
+            c.rotY = -angle;
             c.groupIndex = SELECTED_GROUP_FOR_WHEEL;
             c.wheelIndex = i;
             alignBottom(c);
@@ -449,7 +450,20 @@ function interpolateStates(fromKF, toKF, t) {
                 // Smooth colour transition for spawned duplicates
                 const colorBlend = constrain((t - 0.85) / 0.15, 0, 1);
                 const blendedStroke = lerpColor(color(originalGroupStroke), color(tc.stroke), colorBlend);
-                renderState[w]={x:lerp(groupAnchor.x,tc.x,s),y:lerp(groupAnchor.y,tc.y,s),z:lerp(groupAnchor.z,tc.z,s),rotX:lerp(0,tc.rotX,s),rotY:lerp(0,tc.rotY,s),rotZ:lerp(0,tc.rotZ,s),w:lerp(0,tc.w,s),h:lerp(0,tc.h,s),d:lerp(0,tc.d,s),stroke:blendedStroke,groupIndex:tc.groupIndex,alive:s};
+                renderState[w] = {
+                    x: lerp(groupAnchor.x, tc.x, s),
+                    y: lerp(groupAnchor.y, tc.y, s),
+                    z: lerp(groupAnchor.z, tc.z, s),
+                    rotX: 0,
+                    rotY: tc.rotY,
+                    rotZ: 0,
+                    w: lerp(0, tc.w, s),
+                    h: lerp(0, tc.h, s),
+                    d: lerp(0, tc.d, s),
+                    stroke: blendedStroke,
+                    groupIndex: tc.groupIndex,
+                    alive: s
+                };
                 continue;
             }
             // collapse everything else (fromCards not in group) handled earlier; for wheel index without card just alive 0
@@ -478,12 +492,6 @@ function interpolateStates(fromKF, toKF, t) {
         return;
     }
     // ------------------------------------------------------------------
-
-    // For generic transitions, set up some variables for ordered spawn/despawn 
-    const spawnDelayPerCard = 0.005;
-    const spawnDuration = 0.3;
-    const specialTransition = fromKF.layout === 'stacked-group' || toKF.layout === 'stacked-group';
-    const spawnOrderMap = {}; // default order by index
 
     for (let i = 0; i < maxCount; i++) {
         const fc = fromCards[i] || null;
