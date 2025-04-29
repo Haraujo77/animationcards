@@ -384,6 +384,40 @@ function interpolateStates(fromKF, toKF, t) {
     applyKeyframe(toKF);
     toCards = JSON.parse(JSON.stringify(cards));
 
+    // Flag usada apenas no salto KF2 → KF3 (grupo empilhado → roda)
+    const specialTransition =
+    (fromKF.layout === 'stacked-group' && toKF.layout === 'wheel');
+
+
+    // --------------------------------------------------------------
+    // Generic spawn parameters – KF origem tem menos cartas que destino
+    // --------------------------------------------------------------
+    const baseSpawnStart  = 0.60;  // duplicados só começam depois de 60 % da timeline
+    const spawnWindow     = 0.40;  // e espalham-se pelos 40 % finais
+    const spawnDuration   = 0.30;  // tempo mínimo de crescimento de cada duplicado
+
+    const spawnOrderMap   = {};
+    let   spawnDelayPerCard = 0;
+
+    if (fromKF.cardCount < toKF.cardCount) {
+        const missingIdx = [];
+        for (let i = 0; i < maxCount; i++) {
+            if (!fromCards[i] && toCards[i]) missingIdx.push(i);
+        }
+        spawnDelayPerCard = spawnWindow / Math.max(1, missingIdx.length);
+        missingIdx.forEach((idx, order) => { spawnOrderMap[idx] = order; });
+    }
+
+    // Posição inicial para cartas que surgem — usa a última carta visível do KF origem
+    const spawnOrigin = (fromCards.length > 0)
+        ? {
+            x: fromCards[fromCards.length - 1].x,
+            y: fromCards[fromCards.length - 1].y,
+            z: fromCards[fromCards.length - 1].z
+          }
+        : { x: 0, y: 0, z: 0 };
+
+
     // Precompute anchor position of selected group in fromKF (for special transition)
     let groupAnchor = {x:0, y:0, z:0};
     if (fromKF.layout === 'stacked-group' && toKF.layout === 'wheel') {
@@ -519,10 +553,11 @@ function interpolateStates(fromKF, toKF, t) {
         const existFrom = fc !== null;
         const existTo   = tc !== null;
         if (!existFrom && existTo) {
-            const order = spawnOrderMap[i] ?? 0;
-            const delayStart = order * spawnDelayPerCard;
-            const localT = constrain((t - delayStart) / spawnDuration, 0, 1);
-            let startPos = {x: tc.x, y: tc.y, z: tc.z};
+            const order      = spawnOrderMap[i] ?? 0;
+            const delayStart = baseSpawnStart + order * spawnDelayPerCard;
+            const duration   = Math.max(0.0001, 1 - delayStart);       // tempo real que sobra
+            const localT     = constrain((t - delayStart) / duration, 0, 1);
+            let startPos = spawnOrigin;
             if (specialTransition && tc.groupIndex === SELECTED_GROUP_FOR_WHEEL) {
                 startPos = {...groupAnchor};
             }
