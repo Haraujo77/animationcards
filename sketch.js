@@ -52,7 +52,7 @@ let keyframes = [
     {
         layout: "wheel",
         cardCount: 100,
-        cardWidth: 20,
+        cardWidth: 5,
         cardHeight: 10,
         cardSpacing: 1,
         cardThickness: 0.1,
@@ -76,9 +76,9 @@ let animating = false;
 let SELECTED_GROUP_FOR_WHEEL = 2; // zero‑based (3rd group)
 
 let transitionDurations = {
-    '0-1': 2000,
-    '1-2': 2000,
-    '2-0': 2000
+    '0-1': 1000,
+    '1-2': 1000,
+    '2-0': 1000
 };
 
 function setup() {
@@ -411,13 +411,29 @@ function interpolateStates(fromKF, toKF, t) {
             if(!origMap.has(w)) neededDup.push(w);
         }
         neededDup.sort((a,b)=>a-b);
-        const dupOrder={}; neededDup.forEach((w,order)=>dupOrder[w]=order);
-        const spawnWindow=0.7;
-        const delayPerDup = spawnWindow/Math.max(1,neededDup.length);
-        const spawnDuration=0.3;
+        const dupOrder = {}; neededDup.forEach((w, order) => dupOrder[w] = order);
+        const baseSpawnStart = 0.6;           // start spawning once the group is ~95 % settled
+        const spawnWindow    = 0.4;           // spread spawns across the final 40 % of the timeline
+        const delayPerDup    = spawnWindow / Math.max(1, neededDup.length);
+        const spawnDuration  = 0.3;           // minimum growth time (actual may stretch to fit the remaining timeline)
 
         // Determine original group stroke colour once for blending
         const originalGroupStroke = fromKF.groupSpec ? fromKF.groupSpec.strokeColors[SELECTED_GROUP_FOR_WHEEL % fromKF.groupSpec.strokeColors.length] : '#ffffff';
+        const lastOrigIdx = originals.length ? Math.max(...originals) : null;
+        const lastOrigPos = (lastOrigIdx !== null) ? origMap.get(lastOrigIdx) : groupAnchor; // static start position
+
+        // Current interpolated position of the last original card at time t
+        let lastOrigLivePos = lastOrigPos;
+        if (lastOrigIdx !== null) {
+            const fcLast = origMap.get(lastOrigIdx);
+            const tcLast = toCards[lastOrigIdx];
+            const sOrig  = EASING(t);
+            lastOrigLivePos = {
+                x: lerp(fcLast.x, tcLast.x, sOrig),
+                y: lerp(fcLast.y, tcLast.y, sOrig),
+                z: lerp(fcLast.z, tcLast.z, sOrig)
+            };
+        }
 
         for(let w=0; w<toCards.length; w++){
             const tc = toCards[w];
@@ -444,22 +460,25 @@ function interpolateStates(fromKF, toKF, t) {
                 };
                 continue;
             }
-            if(dupOrder[w]!==undefined){
-                const delay=dupOrder[w]*delayPerDup;
-                const s=constrain((t-delay)/spawnDuration,0,1);
+            if (dupOrder[w] !== undefined) {
+                const delay    = baseSpawnStart + dupOrder[w] * delayPerDup;   // staggered start
+                const duration = max(0.0001, 1 - delay);                      // time left until t reaches 1
+                const startPos = lastOrigLivePos;   // duplicates emerge from the live position of the last original card
+                const s        = constrain((t - delay) / duration, 0, 1);     // scale up over the remaining time
+                const sizeFactor = Math.sqrt(s);               // scale grows faster than position interpolates
                 // Smooth colour transition for spawned duplicates
                 const colorBlend = constrain((t - 0.85) / 0.15, 0, 1);
                 const blendedStroke = lerpColor(color(originalGroupStroke), color(tc.stroke), colorBlend);
                 renderState[w] = {
-                    x: lerp(groupAnchor.x, tc.x, s),
-                    y: lerp(groupAnchor.y, tc.y, s),
-                    z: lerp(groupAnchor.z, tc.z, s),
+                    x: lerp(startPos.x, tc.x, s),
+                    y: lerp(startPos.y, tc.y, s),
+                    z: lerp(startPos.z, tc.z, s),
                     rotX: 0,
                     rotY: tc.rotY,
                     rotZ: 0,
-                    w: lerp(0, tc.w, s),
-                    h: lerp(0, tc.h, s),
-                    d: lerp(0, tc.d, s),
+                    w: lerp(0, tc.w, sizeFactor),
+                    h: lerp(0, tc.h, sizeFactor),
+                    d: lerp(0, tc.d, sizeFactor),
                     stroke: blendedStroke,
                     groupIndex: tc.groupIndex,
                     alive: s
@@ -664,4 +683,4 @@ function draw() {
     }
 
     pop();
-}
+} 
